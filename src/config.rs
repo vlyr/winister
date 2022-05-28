@@ -15,6 +15,10 @@ impl Config {
     pub fn get_keybind(&self, keycode: u8) -> Option<&Keybind> {
         self.keybinds.iter().find(|k| k.keycode == keycode)
     }
+
+    pub fn keybinds(&self) -> &Vec<Keybind> {
+        &self.keybinds
+    }
 }
 
 impl Default for Config {
@@ -24,7 +28,7 @@ impl Default for Config {
         let keybinds = vec![
             Keybind {
                 action: Command("alacritty"),
-                keycode: 36, // enter
+                keycode: 11, // enter
                 modifier: ModMask::N4,
             },
         ];

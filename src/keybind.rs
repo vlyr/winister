@@ -1,12 +1,14 @@
 use xcb::x::ModMask;
 use std::process::Command;
 
+#[derive(Debug, Clone)]
 pub enum Action {
     Command(&'static str),
     MoveToWorkspace(usize),
     MoveFocusedToWorkspace(usize)
 }
 
+#[derive(Debug, Clone)]
 pub struct Keybind {
     pub action: Action,
     pub keycode: u8,

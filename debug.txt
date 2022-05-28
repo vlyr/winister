@@ -1,0 +1,107 @@
+otherMappingNotify(
+    MappingNotifyEvent {
+        response_type: 34,
+        pad: 1,
+        sequence: 2,
+        request: Keyboard,
+        first_keycode: 8,
+        count: 248,
+        pad: 1,
+    },
+)MappingNotify(
+    MappingNotifyEvent {
+        response_type: 34,
+        pad: 1,
+        sequence: 2,
+        request: Modifier,
+        first_keycode: 0,
+        count: 0,
+        pad: 1,
+    },
+)MappingNotify(
+    MappingNotifyEvent {
+        response_type: 34,
+        pad: 1,
+        sequence: 2,
+        request: Keyboard,
+        first_keycode: 8,
+        count: 248,
+        pad: 1,
+    },
+)MappingNotify(
+    MappingNotifyEvent {
+        response_type: 34,
+        pad: 1,
+        sequence: 2,
+        request: Modifier,
+        first_keycode: 0,
+        count: 0,
+        pad: 1,
+    },
+)KeyPress(
+    KeyPressEvent {
+        response_type: 2,
+        detail: 11,
+        sequence: 2,
+        time: 19516265,
+        root: Window {
+            res_id: 1705,
+        },
+        event: Window {
+            res_id: 1705,
+        },
+        child: Window {
+            res_id: 0,
+        },
+        root_x: 960,
+        root_y: 540,
+        event_x: 960,
+        event_y: 540,
+        state: (empty),
+        same_screen: true,
+        pad: 1,
+    },
+)MappingNotify(
+    MappingNotifyEvent {
+        response_type: 34,
+        pad: 1,
+        sequence: 2,
+        request: Keyboard,
+        first_keycode: 8,
+        count: 248,
+        pad: 1,
+    },
+)MappingNotify(
+    MappingNotifyEvent {
+        response_type: 34,
+        pad: 1,
+        sequence: 2,
+        request: Modifier,
+        first_keycode: 0,
+        count: 0,
+        pad: 1,
+    },
+)KeyPress(
+    KeyPressEvent {
+        response_type: 2,
+        detail: 11,
+        sequence: 2,
+        time: 19698189,
+        root: Window {
+            res_id: 1705,
+        },
+        event: Window {
+            res_id: 1705,
+        },
+        child: Window {
+            res_id: 0,
+        },
+        root_x: 960,
+        root_y: 540,
+        event_x: 960,
+        event_y: 540,
+        state: (empty),
+        same_screen: true,
+        pad: 1,
+    },
+)ballsballsballsballsballsballsballsballsballsballsballsballsballsballsballsballsballsballsballsballsballsballsballsballsballsballsballsballsballsballsballsballsballsballsballsballsballsballsballsballsballsballsballsballsballsballsballsballsballsballsballsballsballs
