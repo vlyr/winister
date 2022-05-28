@@ -24,18 +24,15 @@ lazy_static! {
 }
 
 fn panic_handler(info: &PanicInfo) -> ! {
-    std::fs::write("./panic.txt", format!("{}", info));
+    std::fs::write("./panic.txt", format!("{}", info)).unwrap();
     std::process::exit(1);
 }
 
 fn on_key_press(state: &mut State, event: XEvent) {
     if let XEvent::KeyPress(ev) = event {
-        state.debug_file.write(b"balls").unwrap();
-
         if let Some(keybind) = state.config().get_keybind(ev.detail()) {
             let mod_mask_bits = keybind.modifier.bits();
 
-            std::fs::write("./panic.txt", format!("{:#?}, {}", mod_mask_bits, ev.state().bits()));
             if ev.state().bits() == mod_mask_bits {
                 keybind.exec();
             }
@@ -44,7 +41,7 @@ fn on_key_press(state: &mut State, event: XEvent) {
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
-    std::process::Command::new("alacritty").spawn();
+    std::process::Command::new("alacritty").spawn().unwrap();
     std::panic::set_hook(Box::new(|info| panic_handler(info)));
     let (conn, screen) = xcb::Connection::connect(None)?;
 
@@ -86,7 +83,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             
 
             if let Some(f) = HANDLERS.get(&ev_str) {
-                //fs::write("./debug.txt", format!("{:#?}", ev)).unwrap();
+                state.debug_file.write(format!("{:#?}", ev).as_bytes()).unwrap();
                 f(&mut state, ev);
             }
         }
