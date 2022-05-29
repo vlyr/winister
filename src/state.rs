@@ -1,32 +1,32 @@
-use xcb::x::Window;
+use xcb::x::{ScreenBuf, Window};
 use crate::config::Config;
 use xcb::Connection;
-use std::fs::File;
-use std::fs::OpenOptions;
 
 pub struct State {
     config: Config,
     focused_window: Option<Window>,
     connection: Connection,
-    pub debug_file: File,
-    should_exit: bool
+    should_exit: bool,
+    screen_num: i32,
 }
 
 impl State {
-    pub fn new(connection: Connection) -> Self {
-        let file = OpenOptions::new().append(true).write(true).read(true).create(true).open("./debug.txt").unwrap();
-
+    pub fn new(connection: Connection, screen_num: i32) -> Self {
         Self {
             connection,
+            screen_num,
             focused_window: None,
             config: Config::default(),
             should_exit: false,
-            debug_file: file
         }
     }
 
     pub fn config(&self) -> &Config {
         &self.config
+    }
+
+    pub fn screen_num(&self) -> i32 {
+        self.screen_num
     }
 
     pub fn should_exit(&self) -> bool {
@@ -39,5 +39,12 @@ impl State {
 
     pub fn connection(&self) -> &Connection {
         &self.connection
+    }
+
+    pub fn screen_wh(&self) -> (u16, u16) {
+        let setup = self.connection.get_setup();
+        let screen = setup.roots().nth(self.screen_num as usize).unwrap();
+        
+        (screen.width_in_pixels(), screen.height_in_pixels())
     }
 }
