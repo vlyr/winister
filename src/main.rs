@@ -30,10 +30,11 @@ fn panic_handler(info: &PanicInfo) -> ! {
 fn on_key_press(state: &mut State, event: XEvent) {
     if let XEvent::KeyPress(ev) = event {
         if let Some(keybind) = state.config().get_keybind(ev.detail()) {
+            let keybind = keybind.clone();
             let mod_mask_bits = keybind.modifier.bits();
 
             if ev.state().bits() == mod_mask_bits {
-                keybind.exec();
+                keybind.exec(state);
             }
         }
     }
@@ -41,14 +42,21 @@ fn on_key_press(state: &mut State, event: XEvent) {
 
 fn on_map_notify(state: &mut State, event: XEvent) {
     if let XEvent::MapNotify(ev) = event {
+        state.current_workspace_mut().windows_mut().push(ev.window());
         let (screen_width, screen_height) = state.screen_wh();
 
         state.connection().send_request(&x::ConfigureWindow {
             window: ev.window(),
             value_list: &[
-                x::ConfigWindow::Width(screen_width as u32),
-                x::ConfigWindow::Height(screen_height as u32)
+                x::ConfigWindow::Width(screen_width as u32 - 4),
+                x::ConfigWindow::Height(screen_height as u32 - 4),
+                x::ConfigWindow::BorderWidth(2),
             ],
+        });
+
+        state.connection().send_request(&x::ChangeWindowAttributes {
+            window: ev.window(),
+            value_list: &[x::Cw::BorderPixel(0xff0000)],
         });
     }
 }
@@ -68,7 +76,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         value_list: &[x::Cw::EventMask(x::EventMask::SUBSTRUCTURE_NOTIFY)]
     });
 
-    let mut state = State::new(conn, screen_num);
+    let mut state = State::new(conn, screen_num, 10);
 
     for keybind in state.config().keybinds().iter() {
         state.connection().send_request(&x::GrabKey {

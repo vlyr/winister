@@ -1,4 +1,4 @@
-use crate::keybind::Keybind;
+use crate::core::Keybind;
 use xcb::x::ModMask;
 
 pub struct Config {
@@ -23,15 +23,29 @@ impl Config {
 
 impl Default for Config {
     fn default() -> Self {
-        use crate::keybind::Action::*;
+        use crate::core::KeybindAction::*;
 
-        let keybinds = vec![
+        let mut keybinds = vec![
             Keybind {
                 action: Command("alacritty"),
-                keycode: 11, // enter
+                keycode: 36, // enter
                 modifier: ModMask::N4,
             },
         ];
+
+        for i in 0..10 {
+            keybinds.push(Keybind {
+                action: MoveToWorkspace(i),
+                keycode: i as u8 + 10,
+                modifier: ModMask::N4,
+            });
+
+            keybinds.push(Keybind {
+                action: MoveFocusedToWorkspace(i),
+                keycode: i as u8 + 10,
+                modifier: ModMask::N4 | ModMask::SHIFT,
+            })
+        }
 
         Self {
             keybinds,

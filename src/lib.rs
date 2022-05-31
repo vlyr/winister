@@ -1,4 +1,4 @@
 pub mod config;
 pub mod util;
 pub mod state;
-pub mod keybind;
+pub mod core;
