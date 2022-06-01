@@ -20,9 +20,7 @@ impl Layout {
     ) -> Vec<Area> {
         match window_count {
             0 => vec![],
-
             1 => vec![Area { x, y, width, height }],
-
             _ => {
                 if idx % 2 == vertical {
                     let mut vec = vec![Area { x, y, width, height: height / 2 }];
