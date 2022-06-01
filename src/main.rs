@@ -1,12 +1,11 @@
-use std::error::Error;
 use xcb::x::{self, Event as XEvent};
 use xcb::Event as XCBEvent;
 use std::collections::HashMap;
 use lazy_static::lazy_static;
 use std::panic::PanicInfo;
-use std::fs;
 
 use winister::{
+    core::Area,
     util::{debug, event_to_string},
     state::State,
 };
@@ -17,6 +16,7 @@ lazy_static! {
 
         map.insert("key_press", on_key_press);
         map.insert("map_notify", on_map_notify);
+        map.insert("destroy_notify", on_destroy_notify);
         map.insert("other".into(), |_, _| {});
 
         map
@@ -39,14 +39,26 @@ fn on_key_press(state: &mut State, event: XEvent) {
 
 fn on_map_notify(state: &mut State, event: XEvent) {
     if let XEvent::MapNotify(ev) = event {
-        state.current_workspace_mut().windows_mut().push(ev.window());
-        let (screen_width, screen_height) = state.screen_wh();
+        let workspace = state.current_workspace_mut();
+        workspace.add_window(ev.window());
+
+        let mut workspace = workspace.clone();
+
+        let (sw, sh) = state.screen_wh();
+
+        workspace.resize(
+            winister::layout::Layout::Winister,
+            sw as u32,
+            sh as u32,
+            2,
+            state
+        );
 
         state.connection().send_request(&x::ConfigureWindow {
             window: ev.window(),
             value_list: &[
-                x::ConfigWindow::Width(screen_width as u32 - 4),
-                x::ConfigWindow::Height(screen_height as u32 - 4),
+                x::ConfigWindow::Width(sw as u32 - 4),
+                x::ConfigWindow::Height(sh as u32 - 4),
                 x::ConfigWindow::BorderWidth(2),
             ],
         });
@@ -57,6 +69,25 @@ fn on_map_notify(state: &mut State, event: XEvent) {
         });
 
         state.set_focused_window(Some(ev.window()));
+    }
+}
+
+fn on_destroy_notify(state: &mut State, event: XEvent) {
+    if let XEvent::DestroyNotify(ev) = event {
+        let workspace = state.current_workspace_mut();
+        workspace.remove_window(ev.window());
+
+        let mut workspace = workspace.clone();
+
+        let (sw, sh) = state.screen_wh();
+
+        workspace.resize(
+            winister::layout::Layout::Winister,
+            sw as u32,
+            sh as u32,
+            2,
+            state
+        );
     }
 }
 

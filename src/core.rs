@@ -2,16 +2,20 @@ use xcb::x::{Window, ModMask, self};
 use crate::state::State;
 use std::process::Command;
 use xcb::Xid;
+use crate::layout::Layout;
+use crate::util::debug;
 
 #[derive(Debug, Clone)]
 pub struct Workspace {
-    windows: Vec<Window>
+    windows: Vec<Window>,
+    focused_window: Option<Window>
 }
 
 impl Workspace {
     pub fn new() -> Self {
         Self {
             windows: vec![],
+            focused_window: None,
         }
     }
 
@@ -21,6 +25,62 @@ impl Workspace {
 
     pub fn windows_mut(&mut self) -> &mut Vec<Window> {
         &mut self.windows
+    }
+
+    pub fn add_window(&mut self, window: Window) {
+        if let None = self.windows.iter().find(|win| *win == &window) {
+            self.windows.push(window);
+        }
+    }
+
+    pub fn remove_window(&mut self, window: Window) {
+        if let Some(idx) = self.windows.iter().position(|win| win == &window) {
+            self.windows.remove(idx);
+        }
+    }
+
+    pub fn resize(&mut self, layout: Layout, width: u32, height: u32, border_width: u32, state: &State) {
+        let count = self.windows.len();
+
+        let areas = layout.generate_window_sizes(
+            count,
+            0,
+            0, // gap
+            0, // gap
+            width,
+            height,
+            1
+        );
+
+        for (i, window) in self.windows.iter_mut().enumerate() {
+            let area = &areas[i];
+
+            state.connection().send_request(&x::ConfigureWindow {
+                window: *window,
+                value_list: &[
+                    x::ConfigWindow::X(area.x as i32),
+                    x::ConfigWindow::Y(area.y as i32),
+                    x::ConfigWindow::Width(area.width),
+                    x::ConfigWindow::Height(area.height),
+                    x::ConfigWindow::BorderWidth(border_width)
+                ]
+            });
+
+            state.connection().send_request(&x::ChangeWindowAttributes {
+                window: *window,
+                value_list: &[x::Cw::BorderPixel(0xff0000)],
+            });
+
+            if let Some(win) = state.focused_window() {
+                if win == *window {
+                    state.connection().send_request(&x::SetInputFocus {
+                        focus: *window,
+                        revert_to: x::InputFocus::Parent,
+                        time: 0,
+                    });
+                }
+            }
+        }
     }
 }
 
@@ -103,4 +163,12 @@ impl Keybind {
             }
         }
     }
+}
+
+#[derive(Debug, Clone)]
+pub struct Area {
+    pub x: u32,
+    pub y: u32,
+    pub width: u32,
+    pub height: u32,
 }
