@@ -29,8 +29,16 @@ impl State {
         &self.config
     }
 
+    pub fn current_workspace_idx(&self) -> usize {
+        self.current_workspace
+    }
+
     pub fn current_workspace(&self) -> &Workspace {
         self.workspaces.get(self.current_workspace).unwrap()
+    }
+
+    pub fn set_focused_window(&mut self, value: Option<Window>) {
+        self.focused_window = value;
     }
 
     pub fn current_workspace_mut(&mut self) -> &mut Workspace {
@@ -54,6 +62,10 @@ impl State {
 
     pub fn workspaces(&self) -> &Vec<Workspace> {
         &self.workspaces
+    }
+
+    pub fn workspaces_mut(&mut self) -> &mut Vec<Workspace> {
+        &mut self.workspaces
     }
 
     pub fn connection(&self) -> &Connection {

@@ -1,6 +1,7 @@
 use xcb::x::{Window, ModMask, self};
 use crate::state::State;
 use std::process::Command;
+use xcb::Xid;
 
 #[derive(Debug, Clone)]
 pub struct Workspace {
@@ -27,7 +28,8 @@ impl Workspace {
 pub enum KeybindAction {
     Command(&'static str),
     MoveToWorkspace(usize),
-    MoveFocusedToWorkspace(usize)
+    MoveFocusedToWorkspace(usize),
+    CloseFocused,
 }
 
 #[derive(Debug, Clone)]
@@ -43,22 +45,58 @@ impl Keybind {
             KeybindAction::Command(cmd) => { Command::new(cmd).spawn().unwrap(); }
 
             KeybindAction::MoveToWorkspace(workspace_idx) => {
-                for window in state.current_workspace().windows() {
-                    state.connection().send_request(&x::UnmapWindow {
-                        window: *window
-                    });
-                }
+                if *workspace_idx != state.current_workspace_idx() {
+                    for window in state.current_workspace().windows() {
+                        state.connection().send_request(&x::UnmapWindow {
+                            window: *window
+                        });
+                    }
 
-                state.set_current_workspace(*workspace_idx);
+                    state.set_current_workspace(*workspace_idx);
 
-                for window in state.current_workspace().windows() {
-                    state.connection().send_request(&x::MapWindow {
-                        window: *window,
-                    });
+                    for window in state.current_workspace().windows() {
+                        state.connection().send_request(&x::MapWindow {
+                            window: *window,
+                        });
+                    }
                 }
             }
 
-            KeybindAction::MoveFocusedToWorkspace(workspace_idx) => {}
+            KeybindAction::MoveFocusedToWorkspace(workspace_idx) => {
+                if let Some(win) = state.focused_window() {
+                    state.connection().send_request(&x::UnmapWindow {
+                        window: win
+                    });
+
+                    state.connection().flush().unwrap();
+
+                    let window_idx = state.current_workspace_mut()
+                        .windows_mut()
+                        .iter()
+                        .position(|w| w == &win)
+                        .unwrap();
+
+                    state.current_workspace_mut().windows_mut().remove(window_idx);
+
+                    state.workspaces_mut()
+                        .get_mut(*workspace_idx)
+                        .unwrap()
+                        .windows_mut()
+                        .push(win)
+                }
+            }
+
+            KeybindAction::CloseFocused => {
+                if let Some(win) = state.focused_window() {
+                    state.connection().send_request(&x::KillClient {
+                        resource: win.resource_id(),
+                    });
+
+                    state.current_workspace_mut()
+                        .windows_mut()
+                        .retain(|w| w != &win)
+                }
+            }
         }
     }
 }

@@ -4,6 +4,7 @@ use xcb::Event as XCBEvent;
 use std::collections::HashMap;
 use lazy_static::lazy_static;
 use std::panic::PanicInfo;
+use std::fs;
 
 use winister::{
     util::{debug, event_to_string},
@@ -29,13 +30,9 @@ fn panic_handler(info: &PanicInfo) -> ! {
 
 fn on_key_press(state: &mut State, event: XEvent) {
     if let XEvent::KeyPress(ev) = event {
-        if let Some(keybind) = state.config().get_keybind(ev.detail()) {
+        if let Some(keybind) = state.config().get_keybind(ev.detail(), ev.state()) {              
             let keybind = keybind.clone();
-            let mod_mask_bits = keybind.modifier.bits();
-
-            if ev.state().bits() == mod_mask_bits {
-                keybind.exec(state);
-            }
+            keybind.exec(state);
         }
     }
 }
@@ -58,13 +55,14 @@ fn on_map_notify(state: &mut State, event: XEvent) {
             window: ev.window(),
             value_list: &[x::Cw::BorderPixel(0xff0000)],
         });
+
+        state.set_focused_window(Some(ev.window()));
     }
 }
 
-fn main() -> Result<(), Box<dyn Error>> {
-    std::process::Command::new("alacritty").spawn().unwrap();
+fn main() {
     std::panic::set_hook(Box::new(|info| panic_handler(info)));
-    let (conn, screen_num) = xcb::Connection::connect(None)?;
+    let (conn, screen_num) = xcb::Connection::connect(None).unwrap();
 
     let setup = conn.get_setup();
     let screen = setup.roots().nth(screen_num as usize).unwrap();
@@ -90,26 +88,27 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     }
 
-    state.connection().flush()?;
+    state.connection().flush().unwrap();
 
     loop {
         if state.should_exit() {
             break;
         }
 
-        let event = state.connection().wait_for_event()?;
-
-        if let XCBEvent::X(ev) = event {
-            debug(format!("{:#?}", ev));
-            let ev_str = event_to_string(&ev);
-
-            if let Some(f) = HANDLERS.get(&ev_str) {
-                f(&mut state, ev);
+        match state.connection().wait_for_event() {
+            Ok(event) => {
+                if let XCBEvent::X(ev) = event {
+                    debug(format!("{:#?}", ev));
+                    let ev_str = event_to_string(&ev);
+                    
+                    if let Some(f) = HANDLERS.get(&ev_str) {
+                        f(&mut state, ev);
+                    }
+                }
             }
+            Err(_) => ()
         }
 
         state.connection().flush().unwrap();
     }
-
-    Ok(())
 }
