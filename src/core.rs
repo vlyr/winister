@@ -92,9 +92,13 @@ impl Keybind {
                         resource: win.resource_id(),
                     });
 
-                    state.current_workspace_mut()
-                        .windows_mut()
-                        .retain(|w| w != &win)
+                    let windows = state.current_workspace_mut().windows_mut();
+                    windows.retain(|w| w != &win);
+
+                    if !windows.is_empty() {
+                        let window = windows.get(windows.len() - 1).unwrap().clone();
+                        state.set_focused_window(Some(window));
+                    }
                 }
             }
         }
